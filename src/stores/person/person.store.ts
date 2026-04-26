@@ -1,13 +1,7 @@
 import { create, StateCreator} from 'zustand'
 
-import { persist } from 'zustand/middleware'
-import { customSessionStorage } from './storages/session-storage.storage.ts';
-
-// interface Person {
-//     id: number,
-//     firstName: string,
-//     lastName: string,
-// }
+import { devtools, persist } from 'zustand/middleware'
+import { fireBaseStorage } from '../storages/fireBase.storage';
 
 
 interface PersonState {
@@ -21,31 +15,24 @@ interface Actions {
     setLastName: (lastName: string) => void;
 }
 
-const storeAPI: StateCreator<PersonState & Actions> = (set) => ({
+const storeAPI: StateCreator<PersonState & Actions, [["zustand/persist", unknown], ["zustand/devtools", never]]> = (set) => ({
 
         firstName:"",
         lastName:"",
 
-        setFirstName: (firstName: string) => set(state =>({ firstName })),
-        setLastName: (lastName: string) => set(state =>({ lastName })),   
+        setFirstName: (firstName: string) => set(({ firstName }),false,'setFirstName'),
+        setLastName: (lastName: string) => set(({ lastName }),false,'setLastName'),   
 
 })
 
 
 
-// const localStorage: StateStorage ={
-//     getItem: function (name: string): string | null | Promise<string | null> {  
-//         throw new Error('Function not implemented.');
-//     },
-//     setItem: function (name: string, value: string): unknown {
-//         throw new Error('Function not implemented.');
-//     },
-//     removeItem: function (name: string): unknown {
-//         throw new Error('Function not implemented.');
-//     }
-// }
+
 
 
 export const usePersonStore = create<PersonState & Actions>()(
-    persist(storeAPI, {name: 'person-storage',storage: customSessionStorage})
+    persist(
+        devtools(storeAPI),
+        {name: 'person-storage',storage: fireBaseStorage}
+    )
 );
