@@ -1,11 +1,22 @@
 import { create, StateCreator} from 'zustand'
 import type { Task, TaskStatus} from '../../interfaces';
+import { devtools } from 'zustand/middleware';
 
 
 interface TaskState{
     tasks: Record<string, Task>
 
+    draggingTaskId?: string;
+    draggingOverId?: string;
+
     getTaskStatus: (status:TaskStatus) => Task[]
+
+    setDraggingTaskId: (taskId:string) => void
+
+    setDraggingOverId: (title:string) => void
+
+
+    moveItem: () => void
 }
 
 const storyApi: StateCreator<TaskState> = (set,get) => ({
@@ -20,34 +31,45 @@ const storyApi: StateCreator<TaskState> = (set,get) => ({
         const tasks = Object.values(get().tasks);
         return tasks.filter(task => task.status === status);
      },
+
+     draggingTaskId: undefined,
+
+     setDraggingTaskId:(taskId:string) => {
+        set({ draggingTaskId: taskId });
+     },
+
+    setDraggingOverId:(title:string) => {
+        set({ draggingOverId: title });
+    },
+
+    moveItem:() => {
+
+        if(!get().draggingTaskId || !get().draggingOverId) return;
+        const taskId = get().draggingTaskId;
+        const draggingOverId:TaskStatus = get().draggingOverId as TaskStatus;
+
+        if(!taskId || !draggingOverId) return;
+
+            const task = get().tasks[taskId ];
+            task.status = draggingOverId as TaskStatus;
+            
+            const newTasks = {
+                ...get().tasks,
+                [taskId]: {
+                ...get().tasks[taskId ],
+                          status: draggingOverId as TaskStatus,
+                 },
+            }
+            set({tasks: newTasks})  
+
+            set({ draggingTaskId: undefined });
+            set({ draggingOverId: undefined });
+    }
+
 })
 
-export const useTaskStore = create<TaskState>()(storyApi);
-
-// import { create, StateCreator} from 'zustand'
-
-// import { devtools, persist } from 'zustand/middleware'
-// import { fireBaseStorage } from '../storages/fireBase.storage';
-
-
-// interface PersonState {
-//     firstName: string,
-//     lastName: string,
-// }
-
-// interface Actions {
-
-//     setFirstName: (firstName: string) => void;
-//     setLastName: (lastName: string) => void;
-// }
-
-// const storeAPI: StateCreator<PersonState & Actions, [["zustand/persist", unknown], ["zustand/devtools", never]]> = (set) => ({
-
-//         firstName:"",
-//         lastName:"",
-
-//         setFirstName: (firstName: string) => set(({ firstName }),false,'setFirstName'),
-//         setLastName: (lastName: string) => set(({ lastName }),false,'setLastName'),   
-
-// })
-
+export const useTaskStore = create<TaskState>()(
+    devtools(
+        storyApi, { name: 'Task Store' }
+    )
+);

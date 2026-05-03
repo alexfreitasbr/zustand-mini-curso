@@ -1,6 +1,7 @@
-import { IoCheckmarkCircleOutline, IoEllipsisHorizontalOutline, IoReorderTwoOutline } from 'react-icons/io5';
+import { IoCheckmarkCircleOutline, IoEllipsisHorizontalOutline } from 'react-icons/io5';
 import { Task, TaskStatus } from '../../interfaces';
 import { SingleTask } from './singleTask';
+import { useTaskStore } from '../../stores';
 
 interface Props {
   title: string;
@@ -10,8 +11,26 @@ interface Props {
 
 
 export const JiraTasks = ({ title,value, tasks }: Props) => {
+      const setDraggingOverId = useTaskStore((state) => state.setDraggingOverId);
+      const moveItem = useTaskStore((state) => state.moveItem);
+
+
+      const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => {
+        event.preventDefault();
+        setDraggingOverId(value);
+      }
+
+
+       const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
+        event.preventDefault();
+        moveItem();
+      }
+  
   return (
-    <div className="!text-black relative flex flex-col rounded-[20px]  bg-white bg-clip-border shadow-3xl shadow-shadow-500  w-full !p-4 3xl:p-![18px]">
+    <div 
+      onDragOver={handleDragOver}
+      onDrop={handleDrop}
+      className="!text-black relative flex flex-col rounded-[20px]  bg-white bg-clip-border shadow-3xl shadow-shadow-500  w-full !p-4 3xl:p-![18px]">
 
 
       {/* Task Header */ }
